@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lohnrechner 2026</title>
+<style>
+:root{
+  --brand:#BA2B4C; --brand-dk:#93223D;
+  --bg:#ffffff; --surface:#ffffff; --band:#F2F2F2; --line:#DCDCDC;
+  --text:#1a1a1a; --muted:#5f5f5f; --input:#FFF2CC; --input-line:#E0C878;
+  --state:#E2EFDA; --state-line:#BFD9AE; --key:#D9E2F3; --warn:#C00000;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181818; --surface:#212121; --band:#2a2a2a; --line:#3d3d3d;
+    --text:#ececec; --muted:#a8a8a8; --input:#4a3f1f; --input-line:#7a6a33;
+    --state:#26351f; --state-line:#3f5433; --key:#233149; --warn:#ff7b7b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181818; --surface:#212121; --band:#2a2a2a; --line:#3d3d3d;
+  --text:#ececec; --muted:#a8a8a8; --input:#4a3f1f; --input-line:#7a6a33;
+  --state:#26351f; --state-line:#3f5433; --key:#233149; --warn:#ff7b7b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:Calibri,"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.45;}
+.wrap{max-width:900px;margin:0 auto;padding:0 0 48px;}
+header{background:var(--surface);padding:18px 18px 0;}
+.logo{max-width:224px;width:60%;height:auto;display:block;margin-bottom:14px}
+.titlebar{background:var(--brand);color:#fff;font-size:1.45rem;font-weight:700;padding:10px 14px;}
+.subbar{background:var(--band);color:var(--muted);font-weight:600;font-size:.85rem;padding:6px 14px;
+  border-bottom:1px solid var(--line);}
+section{margin-top:22px;padding:0 14px;}
+h2{background:var(--brand);color:#fff;font-size:1rem;font-weight:700;margin:0 -14px 14px;
+  padding:8px 14px;}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:7px 0;
+  border-bottom:1px solid var(--line);}
+.row:last-child{border-bottom:none}
+.row .lab{flex:1 1 230px;min-width:0}
+.row .val{flex:0 0 auto}
+.hint{display:block;font-size:.75rem;color:var(--muted);margin-top:2px}
+input,select{font:inherit;font-size:1rem;font-weight:700;color:var(--text);
+  background:var(--input);border:1px solid var(--input-line);border-radius:4px;
+  padding:6px 8px;min-width:132px;text-align:center;}
+input[type=date]{min-width:150px}
+select{font-weight:700}
+input:focus,select:focus{outline:2px solid var(--brand);outline-offset:1px}
+.periods{width:100%;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:430px}
+th{font-size:.76rem;color:var(--muted);text-align:center;font-weight:700;padding:4px;
+  border-bottom:1px solid var(--line)}
+th:first-child{text-align:left}
+td{padding:4px 3px;text-align:center}
+td:first-child{text-align:left;font-size:.9rem;white-space:nowrap;padding-right:8px}
+td input{min-width:0;width:100%}
+.days{background:var(--band);border:1px solid var(--line);border-radius:4px;
+  padding:6px 4px;font-weight:700;font-size:.9rem}
+.sum{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;
+  padding:9px 12px;background:var(--key);border-radius:5px;font-size:.9rem}
+.sum b{font-size:1.05rem}
+.note{font-size:.8rem;color:var(--muted);margin-top:8px}
+.note.alert{color:var(--warn);font-weight:700}
+.out{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;
+  padding:8px 10px;margin-bottom:3px;background:var(--band);border-radius:4px}
+.out .lab{flex:1 1 210px}
+.out .num{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-size:1.02rem;min-width:118px;text-align:right}
+.out.big{background:var(--key);padding:12px 10px}
+.out.big .num{font-size:1.35rem;color:var(--brand)}
+.out.state{background:var(--state);border-left:4px solid var(--state-line)}
+.out.sub .lab{padding-left:14px;color:var(--muted);font-size:.92rem}
+details{margin-top:16px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
+summary{cursor:pointer;padding:10px 12px;font-weight:700;font-size:.92rem}
+details table{min-width:0}
+details td{text-align:left;font-size:.87rem;padding:5px 12px;border-bottom:1px solid var(--line)}
+details td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+footer{margin-top:26px;padding:0 14px;font-size:.78rem;color:var(--muted)}
+@media (max-width:520px){
+  body{font-size:15px}
+  .row{align-items:stretch}
+  .row .val,input,select{width:100%}
+  .out .num{min-width:0;text-align:left}
+}
+#start{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#start .logo{max-width:260px;margin:0 auto 26px}
+#start h1{margin:0 0 6px;font-size:1.5rem;color:var(--brand)}
+#start p{margin:0 0 22px;color:var(--muted)}
+#start .langs{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+#start button,.sw button{font:inherit;cursor:pointer}
+#start button{background:var(--brand);color:#fff;border:0;border-radius:6px;padding:14px 34px;font-size:1.15rem;font-weight:700;min-width:170px}
+#start button:hover{background:var(--brand-dk)}
+.sw{display:flex;justify-content:flex-end;gap:6px;margin:-8px 0 8px;align-items:center;font-size:.8rem;color:var(--muted)}
+.sw button{background:var(--band);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:2px 10px;font-weight:700}
+.sw button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+</style>
+</head>
+<body>
+<div id="start">
+  <img class="logo" alt="" id="logo2">
+  <h1>Lohnrechner 2026 · Calcolatore paga 2026</h1>
+  <p>Sprache wählen · Seleziona la lingua</p>
+  <div class="langs"><button type="button" data-lang="de">Deutsch</button><button type="button" data-lang="it">Italiano</button></div>
+</div>
+<div class="wrap">
+<header>
+  <div class="sw" data-notr="1"><span>Sprache / Lingua:</span><button type="button" data-lang="de">DE</button><button type="button" data-lang="it">IT</button><button type="button" id="back">⌂</button></div>
+  <img class="logo" alt="" id="logo">
+  <div class="titlebar">Lohnrechner 2026</div>
+  <div class="subbar">Bitte nur die farbigen Felder ausfüllen</div>
+</header>
+
+<section>
+  <h2>Eingaben</h2>
+  <div class="row"><div class="lab">Kollektivvertrag
+    <span class="hint">mit CNEL-Code; Bau: nur Angestellte (Arbeiter nicht berücksichtigt)</span></div>
+    <div class="val"><select id="kv"></select></div></div>
+  <div class="row"><div class="lab">Anzahl Monatsgehälter
+    <span class="hint">ergibt sich aus dem Kollektivvertrag</span></div>
+    <div class="val"><b id="mg">14</b></div></div>
+  <div class="row"><div class="lab">Vertragsart
+    <span class="hint">bestimmt die INPS-Sätze: befristet +1,4 % (nicht bei Saisonarbeit und Lehrlingen); Saisonarbeit nur bei Handel, Tourismus, Aufstiegsanlagen, Bäcker</span></div>
+    <div class="val"><select id="va"></select></div></div>
+  <div class="row lj" style="display:none"><div class="lab">Betriebsgröße (Anzahl Mitarbeiter)<span class="hint">nur bei Lehrling: bestimmt den INPS-Arbeitgebersatz</span></div>
+    <div class="val"><select id="bg"><option value="0">Über 9 Mitarbeiter</option><option value="1">Bis 9 Mitarbeiter</option></select></div></div>
+  <div class="row lj2" style="display:none"><div class="lab">Lehrjahr<span class="hint">bei Betrieben bis 9 Mitarbeiter: 1. Jahr 1,5 %, 2. Jahr 3 %, ab 3. Jahr 10 % (jeweils zuzüglich 1,61 %)</span></div>
+    <div class="val"><select id="lj"><option value="1">1. Lehrjahr</option><option value="2">2. Lehrjahr</option><option value="3">Ab 3. Lehrjahr</option></select></div></div>
+  <div class="row"><div class="lab">Bruttogehalt pro Monat
+    <span class="hint">Grundlage aller Berechnungen</span></div>
+    <div class="val"><input type="number" id="brutto" value="2000" min="0" step="50"></div></div>
+  <div class="row"><div class="lab">13./14. monatlich anteilig auszahlen?
+    <span class="hint">Ja = 13./14. Monatsgehalt monatlich anteilig; Nein = 13. im Dezember, 14. (falls vorgesehen) im Juni bzw. anteilig bei Beendigung</span></div>
+    <div class="val"><select id="monatlich"><option>Nein</option><option>Ja</option></select></div></div>
+  <div class="row"><div class="lab">Urlaub und Freistunden bei Beendigung auszahlen?
+    <span class="hint">beitrags- und steuerpflichtig</span></div>
+    <div class="val"><select id="fe"><option>Nein</option><option>Ja</option></select></div></div>
+  <div class="row"><div class="lab">Beschäftigungsausmaß
+    <span class="hint">100 % = Vollzeit, z. B. 50 % = Teilzeit</span></div>
+    <div class="val"><input type="number" id="tz" value="100" min="1" max="100" step="5"> %</div></div>
+  <div class="row kl" style="display:none"><div class="lab">Frühstück – Anzahl pro Monat<span class="hint">Tage pro Monat mit Frühstück; Pauschalwert wird vom Nettolohn abgezogen</span></div><div class="val"><input type="number" id="kl_f" value="0" min="0" max="400" step="1"></div></div>
+  <div class="row kl" style="display:none"><div class="lab">Mittag-/Abendessen – Anzahl pro Monat<span class="hint">Mahlzeiten pro Monat; Pauschalwert pro Mahlzeit wird vom Nettolohn abgezogen</span></div><div class="val"><input type="number" id="kl_m" value="0" min="0" max="400" step="1"></div></div>
+  <div class="row kl" style="display:none"><div class="lab">Übernachtungen – Anzahl pro Monat<span class="hint">Tage pro Monat mit Unterkunft; Pauschalwert pro Tag wird vom Nettolohn abgezogen</span></div><div class="val"><input type="number" id="kl_u" value="0" min="0" max="400" step="1"></div></div>
+</section>
+
+<section>
+  <h2>Beschäftigungszeiträume im Kalenderjahr 2026</h2>
+  <div class="periods"><table>
+    <thead><tr><th>Zeitraum</th><th>von</th><th>bis</th><th>Tage</th><th>Tage Mo–Sa</th></tr></thead>
+    <tbody id="ptb"></tbody>
+  </table></div>
+  <div class="sum">
+    <span>Beschäftigungstage gesamt: <b id="tage">0</b></span>
+    <span>Anreifungsmonate Urlaub/Freistunden: <b id="anr">0,00</b></span>
+  </div>
+  <p class="note" id="hint"></p>
+</section>
+
+<section>
+  <h2>Ergebnis Arbeitnehmer</h2>
+  <div class="out big"><div class="lab">Nettogehalt pro Monat – ohne Abfertigung <span class="hint">laufende monatliche Auszahlung</span></div><div class="num" id="o_nettoM"></div></div>
+  <div class="out"><div class="lab">Abfertigung (TFR) netto <span class="hint">wird in einem Betrag bei Beendigung ausbezahlt – bei Saisonverträgen am Saisonende</span></div><div class="num" id="o_tfrN"></div></div>
+  <div class="out big"><div class="lab">Nettogehalt pro Monat – inkl. Abfertigung <span class="hint">Abfertigung rechnerisch auf die Monate verteilt</span></div><div class="num" id="o_nettoMI"></div></div>
+  <div class="out"><div class="lab">Nettolohn gesamt im Zeitraum</div><div class="num" id="o_netto"></div></div>
+  <div class="out"><div class="lab">Bruttobezüge gesamt im Zeitraum <span class="hint">inkl. anteiliger 13./14.</span></div><div class="num" id="o_bg"></div></div>
+  <div class="out"><div class="lab">Bruttostundenlohn</div><div class="num" id="o_stdbr"></div></div>
+  <div class="out"><div class="lab">Nettostundenlohn (Ø)</div><div class="num" id="o_stdnet"></div></div>
+</section>
+
+<section>
+  <h2>Arbeitgeberkosten</h2>
+  <div class="out"><div class="lab">Bruttobezüge (Beitragsgrundlage)</div><div class="num" id="k_bg"></div></div>
+  <div class="out sub"><div class="lab">Sozialabgaben (INPS, Arbeitgeberanteil)</div><div class="num" id="k_inps"></div></div>
+  <div class="out sub"><div class="lab">Unfallversicherung (INAIL)</div><div class="num" id="k_inail"></div></div>
+  <div class="out sub"><div class="lab">Abfertigung (TFR)</div><div class="num" id="k_tfr"></div></div>
+  <div class="out big"><div class="lab">Lohnkosten gesamt im Zeitraum</div><div class="num" id="k_ges"></div></div>
+  <div class="out"><div class="lab">davon Ø pro Monat</div><div class="num" id="k_mon"></div></div>
+  <div class="out"><div class="lab">davon Kosten/h</div><div class="num" id="k_std"></div></div>
+  <div class="out"><div class="lab">Kostenfaktor zum Bruttolohn</div><div class="num" id="k_fak"></div></div>
+</section>
+
+<section>
+  <h2>Davon vom Staat getragen – kein Arbeitgeberaufwand</h2>
+  <div class="out state"><div class="lab">Absetzbetrag abhängige Arbeit <span class="hint">mindert die Bruttosteuer, keine Auszahlung</span></div><div class="num" id="s_det"></div></div>
+  <div class="out state"><div class="lab">Ulteriore detrazione <span class="hint">mindert die Bruttosteuer, keine Auszahlung</span></div><div class="num" id="s_ud"></div></div>
+  <div class="out state"><div class="lab">Trattamento integrativo <span class="hint">wird dem Mitarbeiter ausbezahlt</span></div><div class="num" id="s_ti"></div></div>
+  <div class="out state"><div class="lab">Somma integrativa <span class="hint">wird dem Mitarbeiter ausbezahlt</span></div><div class="num" id="s_si"></div></div>
+  <div class="out big state"><div class="lab">Summe staatlicher Anteil</div><div class="num" id="s_sum"></div></div>
+
+  <details>
+    <summary>Berechnungsschritte anzeigen</summary>
+    <table><tbody id="det"></tbody></table>
+  </details>
+</section>
+
+<footer>
+  <p>Überschlagsmäßige Schätzung nach den 2026 geltenden Eckwerten (INPS, IRPEF gemäß L. 199/2025,
+  Absetzbeträge gemäß Modello 730/2026, cuneo fiscale gemäß L. 207/2024). Der Regionalzuschlag ist
+  bewusst nicht enthalten, da Mitarbeiter aus verschiedenen Regionen beschäftigt werden – das
+  ausgewiesene Netto liegt dadurch je nach Wohnsitzregion etwas zu hoch. Familienlasten und weitere
+  Einkünfte sind nicht berücksichtigt. Der INAIL-Tarif (9,19 ‰) gilt für den vorgesehenen Betrieb.</p>
+  <p>Keine verbindliche Lohnabrechnung und kein Ersatz für die Prüfung durch einen zugelassenen
+  Berufsträger. Bei Fragen wenden Sie sich bitte an Ihre Ansprechperson bei
+  Interconsult – Pichler Steinmair Knoll.</p>
+</footer>
+</div>
+
+<script>window.LOGO_SRC="data:image/png;base64,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";</script>
+<script>
+const P={INPS_AN:.0946,S1:28000,S1R:.23,S2:50000,S2R:.33,S3R:.43,DZ1:15000,DZ1B:1955,DZ2:28000,DZ3:50000,
+B65a:25000,B65b:35000,TIG:15000,TIB:1200,SIRC:20000,SIG1:8500,SIS1:.071,
+SIG2:15000,SIS2:.053,SIS3:.048,UDG1:20000,UDB:1000,UDG2:32000,UDG3:40000,
+INPS_AG:.2746,ZB:.014,KL_F:.19,KL_M:1.05,KL_U:1.17,L_AN:.0584,L_AG:.1161,L_AG1:.0311,L_AG2:.0461,INAIL:9.19,INAIL_Z:.01,TFR_D:13.5,TFR_R:.005,TFR_TAX:.23,
+URL_H:14.44,FRE_H:8.67,TEILER:26,ANR_MAX:12,STD:172,TAGE_J:365};
+const NP=6, Y=2026, MIN_D=Y+"-01-01", MAX_D=Y+"-12-31";
+
+function irpef(x){if(x<=P.S1)return x*P.S1R;if(x<=P.S2)return P.S1*P.S1R+(x-P.S1)*P.S2R;
+  return P.S1*P.S1R+(P.S2-P.S1)*P.S2R+(x-P.S2)*P.S3R;}
+function band(rc){if(rc<=P.DZ1)return P.DZ1B;if(rc<=P.DZ2)return 1910+1190*(P.DZ2-rc)/13000;
+  if(rc<=P.DZ3)return 1910*(P.DZ3-rc)/22000;return 0;}
+let LANG="de";const LOC=()=>LANG==="it"?"it-IT":"de-DE";
+const eur=n=>(isFinite(n)?n:0).toLocaleString(LOC(),{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const eur0=n=>(isFinite(n)?n:0).toLocaleString(LOC(),{minimumFractionDigits:0,maximumFractionDigits:0})+" €";
+const IT={"Lohnrechner 2026": "Calcolatore paga 2026", "Bitte nur die farbigen Felder ausfüllen": "Compilare solo i campi colorati", "Eingaben": "Dati inseriti", "Kollektivvertrag": "Contratto collettivo (CCNL)", "mit CNEL-Code; Bau: nur Angestellte (Arbeiter nicht berücksichtigt)": "con codice CNEL; edilizia: solo impiegati (operai non considerati)", "Anzahl Monatsgehälter": "Numero di mensilità", "ergibt sich aus dem Kollektivvertrag": "risulta dal contratto collettivo", "Vertragsart": "Tipo di contratto", "bestimmt die INPS-Sätze: befristet +1,4 % (nicht bei Saisonarbeit und Lehrlingen); Saisonarbeit nur bei Handel, Tourismus, Aufstiegsanlagen, Bäcker": "determina le aliquote INPS: a termine +1,4 % (non per lavoro stagionale e apprendisti); lavoro stagionale solo per commercio, turismo, impianti di risalita, panificatori", "Unbefristet": "Tempo indeterminato", "Befristet": "Tempo determinato", "Lehrling": "Apprendistato", "Saisonarbeit (befristet)": "Lavoro stagionale (a termine)", "Betriebsgröße (Anzahl Mitarbeiter)": "Dimensione dell'azienda (numero di dipendenti)", "nur bei Lehrling: bestimmt den INPS-Arbeitgebersatz": "solo per apprendisti: determina l'aliquota INPS a carico del datore di lavoro", "Über 9 Mitarbeiter": "Oltre 9 dipendenti", "Bis 9 Mitarbeiter": "Fino a 9 dipendenti", "Lehrjahr": "Anno di apprendistato", "bei Betrieben bis 9 Mitarbeiter: 1. Jahr 1,5 %, 2. Jahr 3 %, ab 3. Jahr 10 % (jeweils zuzüglich 1,61 %)": "nelle aziende fino a 9 dipendenti: 1° anno 1,5 %, 2° anno 3 %, dal 3° anno 10 % (in ogni caso più 1,61 %)", "1. Lehrjahr": "1° anno", "2. Lehrjahr": "2° anno", "Ab 3. Lehrjahr": "Dal 3° anno", "Bruttogehalt pro Monat": "Retribuzione lorda mensile", "Grundlage aller Berechnungen": "base di tutti i calcoli", "13./14. monatlich anteilig auszahlen?": "Pagare tredicesima/quattordicesima in quote mensili?", "Ja = 13./14. Monatsgehalt monatlich anteilig; Nein = 13. im Dezember, 14. (falls vorgesehen) im Juni bzw. anteilig bei Beendigung": "Sì = tredicesima/quattordicesima in quote mensili; No = tredicesima a dicembre, quattordicesima (se prevista) a giugno o in quota alla cessazione", "Ja": "Sì", "Nein": "No", "Urlaub und Freistunden bei Beendigung auszahlen?": "Liquidare ferie e ore di permesso alla cessazione?", "beitrags- und steuerpflichtig": "soggetto a contributi e imposte", "Beschäftigungsausmaß": "Percentuale di impiego", "100 % = Vollzeit, z. B. 50 % = Teilzeit": "100 % = tempo pieno, es. 50 % = part-time", "Frühstück – Anzahl pro Monat": "Colazione – numero al mese", "Tage pro Monat mit Frühstück; Pauschalwert wird vom Nettolohn abgezogen": "giorni al mese con colazione; il valore forfettario viene detratto dal netto", "Mittag-/Abendessen – Anzahl pro Monat": "Pranzo/cena – numero al mese", "Mahlzeiten pro Monat; Pauschalwert pro Mahlzeit wird vom Nettolohn abgezogen": "pasti al mese; il valore forfettario per pasto viene detratto dal netto", "Übernachtungen – Anzahl pro Monat": "Pernottamenti – numero al mese", "Tage pro Monat mit Unterkunft; Pauschalwert pro Tag wird vom Nettolohn abgezogen": "giorni al mese con alloggio; il valore forfettario giornaliero viene detratto dal netto", "Beschäftigungszeiträume im Kalenderjahr 2026": "Periodi di impiego nell'anno solare 2026", "Zeitraum": "Periodo", "von": "dal", "bis": "al", "Tage": "Giorni", "Tage Mo–Sa": "Giorni lun–sab", "Beschäftigungstage gesamt:": "Giorni di impiego totali:", "Anreifungsmonate Urlaub/Freistunden:": "Mesi di maturazione ferie/permessi:", "Ergebnis Arbeitnehmer": "Risultato dipendente", "Nettogehalt pro Monat – ohne Abfertigung": "Netto mensile – senza TFR", "laufende monatliche Auszahlung": "pagamento mensile corrente", "Abfertigung (TFR) netto": "TFR netto", "wird in einem Betrag bei Beendigung ausbezahlt – bei Saisonverträgen am Saisonende": "liquidato in un'unica soluzione alla cessazione – nei contratti stagionali a fine stagione", "Nettogehalt pro Monat – inkl. Abfertigung": "Netto mensile – incluso TFR", "Abfertigung rechnerisch auf die Monate verteilt": "TFR ripartito figurativamente sui mesi", "Nettolohn gesamt im Zeitraum": "Netto totale nel periodo", "Bruttobezüge gesamt im Zeitraum": "Retribuzione lorda totale nel periodo", "inkl. anteiliger 13./14.": "incl. ratei di tredicesima/quattordicesima", "Bruttostundenlohn": "Retribuzione oraria lorda", "Nettostundenlohn (Ø)": "Retribuzione oraria netta (media)", "Arbeitgeberkosten": "Costi a carico del datore di lavoro", "Bruttobezüge (Beitragsgrundlage)": "Retribuzione lorda (base contributiva)", "Sozialabgaben (INPS, Arbeitgeberanteil)": "Contributi previdenziali (INPS, quota datore di lavoro)", "Unfallversicherung (INAIL)": "Assicurazione infortuni (INAIL)", "Abfertigung (TFR)": "TFR (trattamento di fine rapporto)", "Lohnkosten gesamt im Zeitraum": "Costo del lavoro totale nel periodo", "davon Ø pro Monat": "di cui media mensile", "davon Kosten/h": "di cui costo orario", "Kostenfaktor zum Bruttolohn": "Coefficiente di costo rispetto al lordo", "Davon vom Staat getragen – kein Arbeitgeberaufwand": "A carico dello Stato – nessun onere per il datore di lavoro", "Absetzbetrag abhängige Arbeit": "Detrazione per lavoro dipendente", "mindert die Bruttosteuer, keine Auszahlung": "riduce l'imposta lorda, nessun pagamento", "Ulteriore detrazione": "Ulteriore detrazione", "Trattamento integrativo": "Trattamento integrativo", "Somma integrativa": "Somma integrativa", "wird dem Mitarbeiter ausbezahlt": "erogato al dipendente", "Summe staatlicher Anteil": "Totale quota a carico dello Stato", "Berechnungsschritte anzeigen": "Mostra i passaggi di calcolo", "Tagesfaktor": "Fattore giornaliero", "Laufende Bezüge im Zeitraum": "Retribuzione corrente nel periodo", "Urlaubsstunden": "Ore di ferie", "Freistunden": "Ore di permesso", "Urlaub + Freistunden (Auszahlungswert)": "Ferie + permessi (valore di liquidazione)", "Bruttobezüge gesamt (Beitragsgrundlage)": "Retribuzione lorda totale (base contributiva)", "INPS Arbeitnehmeranteil": "Contributi INPS a carico del dipendente", "Steuerpflichtiges Einkommen": "Reddito imponibile", "Theoretisches Jahreseinkommen": "Reddito annuo teorico", "IRPEF-Bruttosteuer": "IRPEF lorda", "IRPEF netto": "IRPEF netta", "Nettolohn im Zeitraum": "Netto nel periodo", "Abfertigung (TFR) netto an den Mitarbeiter": "TFR netto al dipendente", "Achtung: In mindestens einer Zeile liegt „bis“ vor „von“.": "Attenzione: in almeno una riga la data «al» precede la data «dal».", "Bitte „von“ und „bis“ jeweils vollständig ausfüllen.": "Compilare sempre entrambe le date «dal» e «al».", "Bitte mindestens einen Beschäftigungszeitraum eintragen.": "Inserire almeno un periodo di impiego.", "Achtung: über 365 Tage – die Zeiträume überschneiden sich.": "Attenzione: oltre 365 giorni – i periodi si sovrappongono.", "Zeitraum 1": "Periodo 1", "Zeitraum 2": "Periodo 2", "Zeitraum 3": "Periodo 3", "Zeitraum 4": "Periodo 4", "Zeitraum 5": "Periodo 5", "Zeitraum 6": "Periodo 6", "Spedition/Autotransport (Confetra) – CNEL I100": "Spedizione e Trasporto Merci (Confetra) – CNEL I100", "Bäckerei (Confcommercio) – CNEL E023": "Panificatori Confcommercio – CNEL E023", "Bauhandwerk – Angestellte – CNEL F015": "Edilizia (Artigianato) – Impiegati – CNEL F015", "Bauindustrie – Angestellte – CNEL F012": "Edilizia (Aziende Industriali) – Impiegati – CNEL F012", "Bereichsübergreifender Kollektivvertrag vom 12. Februar 2008 und Bereichsabkommen für die Bediensteten der Gemeinden, Bezirksgemeinschaften und Ö.B.P.B – CNEL CPUB": "Contratto Collettivo Intercompartimentale del 12 Febbraio 2008 e Accordo di comparto per i dipendenti dei Comuni, delle comunità comprensoriali e delle A.P.S.P. – CNEL CPUB", "Führungskräfte im Sektor Handel – CNEL H021": "Dirigenti (Commercio) – CNEL H021", "Führungskräfte im Sektor Industrie – CNEL V012": "Dirigenti (Industria) – CNEL V012", "Freiberuf (Consilp) – CNEL H442": "Studi Professionali (Consilp) – CNEL H442", "Friseure und Schönheitspfleger (Handwerk) – CNEL H515": "Acconciatori, Estetisti, Barbieri e Parrucchieri (Artigianato) – CNEL H515", "Tertiärsektor, Verteilung und Dienstleistungsgewerbe (Confcommercio) – CNEL H011": "Commercio Terziario Distribuzione e Servizi (Confcommercio) – CNEL H011", "Gas und Wasser (private Unternehmen) – CNEL K321": "Gas e Acqua (aziende private) – CNEL K321", "Hausangestellte – CNEL H501": "Lavoro domestico – CNEL H501", "Holzverarbeitung, Einrichtung und Steinarbeitergewerbe (Handwerk) – CNEL F060": "Legno, Arredamento e Lapidei (Artigianato) – CNEL F060", "Holzverarbeitung und Einrichtung (Industrie) – CNEL F051": "Legno e Arredamento (Aziende Industriali) – CNEL F051", "Landwirtschaft (Arbeiter) – CNEL A011": "Agricoltura (Operai) – CNEL A011", "Landwirtschaft (Angestellte) – CNEL A021": "Agricoltura (Impiegati) – CNEL A021", "Metallarbeiter, Gold- und Silberschmiede und Zahntechniker (Handwerk) – CNEL C030": "Metalmeccanici, Orafi, Argentieri e Odontecnici (Artigianato) – CNEL C030", "Metallindustrie – CNEL C011": "Metalmeccanici (Industria) – CNEL C011", "Kirchendiener – CNEL V411": "Sacristi – CNEL V411", "Privatschulen (Aninsei) – CNEL T231": "Scuola privata (Aninsei) – CNEL T231", "Aufstiegsanlagen – CNEL I911": "Trasporto a fune – CNEL I911", "Tourismus (Confcommercio), Beherbergung I. + II. Kategorie – CNEL H052": "Turismo (Confcommercio), Alberghi I. + II. Categoria – CNEL H052", "Tourismus (Confcommercio), Beherbergung III. + IV. Kategorie – CNEL H052": "Turismo (Confcommercio), Alberghi III. + IV. Categoria – CNEL H052", "Bedienstete von Nichtbeherbergungsbetrieben, I. + II. Kategorie – CNEL H05Y": "dipendenti da Aziende dei settori Pubblici Esercizi, Ristorazione collettiva e commerciale e Turismo, I. + II. Categoria – CNEL H05Y", "Bedienstete von Nichtbeherbergungsbetrieben, III. + IV. Kategorie – CNEL H05Y": "dipendenti da Aziende dei settori Pubblici Esercizi, Ristorazione collettiva e commerciale e Turismo, III. + IV. Categoria – CNEL H05Y", "Versicherungsagenturen (Sna) – CNEL J154": "Agenzie di assicurazione (Sna) – CNEL J154", "Überschlagsmäßige Schätzung nach den 2026 geltenden Eckwerten (INPS, IRPEF gemäß L. 199/2025, Absetzbeträge gemäß Modello 730/2026, cuneo fiscale gemäß L. 207/2024). Der Regionalzuschlag ist bewusst nicht enthalten, da Mitarbeiter aus verschiedenen Regionen beschäftigt werden – das ausgewiesene Netto liegt dadurch je nach Wohnsitzregion etwas zu hoch. Familienlasten und weitere Einkünfte sind nicht berücksichtigt. Der INAIL-Tarif (9,19 ‰) gilt für den vorgesehenen Betrieb.": "Stima indicativa secondo i valori di riferimento validi per il 2026 (INPS, IRPEF ai sensi della L. 199/2025, detrazioni ai sensi del Modello 730/2026, cuneo fiscale ai sensi della L. 207/2024). L'addizionale regionale non è volutamente inclusa, poiché vengono impiegati dipendenti di regioni diverse – il netto indicato risulta pertanto, a seconda della regione di residenza, leggermente troppo alto. Carichi di famiglia e altri redditi non sono considerati. La tariffa INAIL (9,19 ‰) vale per l'azienda prevista.", "Keine verbindliche Lohnabrechnung und kein Ersatz für die Prüfung durch einen zugelassenen Berufsträger. Bei Fragen wenden Sie sich bitte an Ihre Ansprechperson bei Interconsult – Pichler Steinmair Knoll.": "Non costituisce un cedolino paga vincolante né sostituisce la verifica da parte di un professionista abilitato. Per domande rivolgersi al proprio referente presso Interconsult – Pichler Steinmair Knoll."};
+const T=s=>LANG==="it"&&IT[s]?IT[s]:s;
+const num=(n,d)=>(isFinite(n)?n:0).toLocaleString(LOC(),{minimumFractionDigits:d,maximumFractionDigits:d});
+
+const VA=[["Unbefristet",P.INPS_AN,P.INPS_AG],["Befristet",P.INPS_AN,P.INPS_AG+P.ZB],["Lehrling",P.L_AN,P.L_AG],["Saisonarbeit (befristet)",P.INPS_AN,P.INPS_AG]];
+const LEHR=2, SAISON=3, SAISON_CNEL=/CNEL (H011|H052|H05Y|I911|E023)$/;
+const KV=[["Spedition/Autotransport (Confetra) – CNEL I100", 14], ["Bäckerei (Confcommercio) – CNEL E023", 14], ["Bauhandwerk – Angestellte – CNEL F015", 14], ["Bauindustrie – Angestellte – CNEL F012", 14], ["Bereichsübergreifender Kollektivvertrag vom 12. Februar 2008 und Bereichsabkommen für die Bediensteten der Gemeinden, Bezirksgemeinschaften und Ö.B.P.B – CNEL CPUB", 13], ["Führungskräfte im Sektor Handel – CNEL H021", 14], ["Führungskräfte im Sektor Industrie – CNEL V012", 13], ["Freiberuf (Consilp) – CNEL H442", 14], ["Friseure und Schönheitspfleger (Handwerk) – CNEL H515", 13], ["Tertiärsektor, Verteilung und Dienstleistungsgewerbe (Confcommercio) – CNEL H011", 14], ["Gas und Wasser (private Unternehmen) – CNEL K321", 14], ["Hausangestellte – CNEL H501", 13], ["Holzverarbeitung, Einrichtung und Steinarbeitergewerbe (Handwerk) – CNEL F060", 13], ["Holzverarbeitung und Einrichtung (Industrie) – CNEL F051", 13], ["Landwirtschaft (Arbeiter) – CNEL A011", 14], ["Landwirtschaft (Angestellte) – CNEL A021", 14], ["Metallarbeiter, Gold- und Silberschmiede und Zahntechniker (Handwerk) – CNEL C030", 13], ["Metallindustrie – CNEL C011", 13], ["Kirchendiener – CNEL V411", 14], ["Privatschulen (Aninsei) – CNEL T231", 13], ["Aufstiegsanlagen – CNEL I911", 14], ["Tourismus (Confcommercio), Beherbergung I. + II. Kategorie – CNEL H052", 14], ["Tourismus (Confcommercio), Beherbergung III. + IV. Kategorie – CNEL H052", 14], ["Bedienstete von Nichtbeherbergungsbetrieben, I. + II. Kategorie – CNEL H05Y", 14], ["Bedienstete von Nichtbeherbergungsbetrieben, III. + IV. Kategorie – CNEL H05Y", 14], ["Versicherungsagenturen (Sna) – CNEL J154", 14]];
+function calc(i){
+  const anr=Math.min(i.monsat/P.TEILER,P.ANR_MAX);
+  const TF=Math.min(Math.max(i.tage,0)/P.TAGE_J,1);
+  const bez=i.brutto*i.tz*i.mens*TF, satz=i.brutto/P.STD, vr=VA[i.va]||VA[SAISON], agR=(i.va===LEHR&&i.bg9)?(i.lj===1?P.L_AG1:(i.lj===2?P.L_AG2:P.L_AG)):vr[2];
+  const uStd=P.URL_H*i.tz*anr, fStd=P.FRE_H*i.tz*anr;
+  const feWert=i.fe?(uStd+fStd)*satz:0;
+  const BG=bez+feWert, inpsAN=BG*vr[1], RC=BG-inpsAN, teor=TF>0?RC/TF:0, IL=irpef(RC);
+  const DET=band(RC)*TF+((RC>P.B65a&&RC<=P.B65b)?65:0);
+  let UD=0;
+  if(RC>P.UDG1&&RC<=P.UDG2)UD=P.UDB*TF;
+  else if(RC>P.UDG2&&RC<=P.UDG3)UD=P.UDB*(P.UDG3-RC)/8000*TF;
+  const TI=(RC<=P.TIG&&IL>DET)?P.TIB*TF:0;
+  let SI=0;
+  if(RC<=P.SIRC){const r=teor<=P.SIG1?P.SIS1:(teor<=P.SIG2?P.SIS2:P.SIS3);SI=RC*r;}
+  const ILn=Math.max(0,IL-DET-UD), nettoSt=RC-ILn+TI+SI, klAbz=i.tour?(i.klf*P.KL_F+i.klm*P.KL_M+i.klu*P.KL_U)*TF*12:0, netto=nettoSt-klAbz;
+  const monK=TF*12, monA=TF*i.mens;
+  const divM=i.monatlich?monK:monA;
+  const nettoM=i.tage<=0?0:netto/divM;
+  const inpsAG=BG*agR, inail=BG*P.INAIL/1000*(1+P.INAIL_Z);
+  const tfr=BG/P.TFR_D-BG*P.TFR_R, kosten=BG+inpsAG+inail+tfr;
+  const tfrN=tfr*(1-P.TFR_TAX), nettoMI=i.tage<=0?0:nettoM+tfrN/divM;
+  const kostenM=i.tage<=0?0:kosten/monK, div=P.STD*i.tz;
+  return{klAbz,anr,TF,bez,feWert,uStd,fStd,BG,inpsAN,RC,teor,IL,DET,UD,TI,SI,ILn,netto,nettoM,
+    inpsAG,inail,tfr,tfrN,nettoMI,kosten,kostenM,
+    stdBr:div>0?i.brutto/div:0,stdNet:i.tage<=0||div<=0?0:(netto/monK)/div,
+    stdK:div>0?kostenM/div:0,staat:DET+UD+TI+SI};
+}
+
+const tb=document.getElementById("ptb");
+for(let k=0;k<NP;k++){
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td>Zeitraum '+(k+1)+'</td>'+
+    '<td><input type="date" class="pv" min="'+MIN_D+'" max="'+MAX_D+'"></td>'+
+    '<td><input type="date" class="pb" min="'+MIN_D+'" max="'+MAX_D+'"></td>'+
+    '<td><span class="days d1">0</span></td><td><span class="days d2">0</span></td>';
+  tb.appendChild(tr);
+}
+const rows=[...tb.querySelectorAll("tr")];
+rows[0].querySelector(".pv").value=MIN_D;
+rows[0].querySelector(".pb").value=MAX_D;
+
+function periodStats(){
+  let tage=0,monsat=0,bad=false,part=false;
+  for(const tr of rows){
+    const a=tr.querySelector(".pv").value, b=tr.querySelector(".pb").value;
+    let d=0,m=0;
+    if(a&&b){
+      const da=new Date(a+"T00:00:00"), db=new Date(b+"T00:00:00");
+      const diff=Math.round((db-da)/864e5);
+      if(diff<0){bad=true;}else{
+        d=diff+1;
+        const w=(da.getDay()+6)%7+1;
+        m=d-Math.floor((w+diff)/7);
+      }
+    } else if(a||b){part=true;}
+    tr.querySelector(".d1").textContent=d;
+    tr.querySelector(".d2").textContent=m;
+    tage+=d; monsat+=m;
+  }
+  return{tage,monsat,bad,part};
+}
+
+(function(){const v=document.getElementById("va");VA.forEach((a,x)=>{const o=document.createElement("option");o.value=x;o.textContent=a[0];if(x===SAISON)o.selected=true;v.appendChild(o);});})();
+(function(){const s=document.getElementById("kv");KV.forEach((k,x)=>{const o=document.createElement("option");o.value=k[0];o.textContent=k[0];if(x===21)o.selected=true;s.appendChild(o);});})();
+function render(){
+  const st=periodStats();
+  const tzp=Math.max(0,Math.min(100,parseFloat(document.getElementById("tz").value)||0));
+  const i={brutto:parseFloat(document.getElementById("brutto").value)||0,
+    tz:tzp/100,
+    va:parseInt(document.getElementById("va").value)||0,
+    bg9:document.getElementById("bg").value==="1", lj:parseInt(document.getElementById("lj").value)||1,
+    tour:/CNEL (H052|H05Y)$/.test(document.getElementById("kv").value),
+    klf:parseFloat(document.getElementById("kl_f").value)||0,klm:parseFloat(document.getElementById("kl_m").value)||0,klu:parseFloat(document.getElementById("kl_u").value)||0,
+    mens:(KV.find(k=>k[0]===document.getElementById("kv").value)||KV[21])[1],
+    monatlich:document.getElementById("monatlich").value==="Ja",
+    fe:document.getElementById("fe").value==="Ja",
+    tage:st.tage,monsat:st.monsat};
+  const saisonOk=SAISON_CNEL.test(document.getElementById("kv").value);
+  const vsel=document.getElementById("va");
+  vsel.options[SAISON].hidden=!saisonOk; vsel.options[SAISON].disabled=!saisonOk;
+  if(!saisonOk&&parseInt(vsel.value)===SAISON){vsel.value="1";i.va=1;}
+  document.querySelectorAll(".lj").forEach(e=>e.style.display=i.va===LEHR?"":"none");
+  document.querySelectorAll(".lj2").forEach(e=>e.style.display=(i.va===LEHR&&i.bg9)?"":"none");
+  document.getElementById("mg").textContent=i.mens;
+  document.querySelectorAll(".kl").forEach(e=>e.style.display=i.tour?"":"none");
+  const r=calc(i);
+  document.getElementById("tage").textContent=st.tage;
+  document.getElementById("anr").textContent=num(r.anr,2);
+  const h=document.getElementById("hint");
+  if(st.bad){h.textContent=T('Achtung: In mindestens einer Zeile liegt „bis“ vor „von“.');h.className="note alert";}
+  else if(st.part){h.textContent=T("Bitte „von“ und „bis“ jeweils vollständig ausfüllen.");h.className="note alert";}
+  else if(st.tage===0){h.textContent=T("Bitte mindestens einen Beschäftigungszeitraum eintragen.");h.className="note alert";}
+  else if(st.tage>365){h.textContent=T("Achtung: über 365 Tage – die Zeiträume überschneiden sich.");h.className="note alert";}
+  else{h.textContent=LANG==="it"?"Rilevati: "+st.tage+" su 365 giorni.":"Erfasst: "+st.tage+" von 365 Tagen.";h.className="note";}
+
+  const set=(id,v)=>document.getElementById(id).textContent=v;
+  set("o_nettoM",eur0(r.nettoM)); set("o_tfrN",eur0(r.tfrN)); set("o_nettoMI",eur0(r.nettoMI)); set("o_netto",eur0(r.netto)); set("o_bg",eur0(r.BG));
+  set("o_stdbr",eur(r.stdBr)); set("o_stdnet",eur(r.stdNet));
+  set("k_bg",eur0(r.BG)); set("k_inps",eur0(r.inpsAG)); set("k_inail",eur0(r.inail));
+  set("k_tfr",eur0(r.tfr)); set("k_ges",eur0(r.kosten)); set("k_mon",eur0(r.kostenM));
+  set("k_std",eur(r.stdK)); set("k_fak",r.BG>0?num(r.kosten/r.BG,3)+" ×":"–");
+  set("s_det",eur0(r.DET)); set("s_ud",eur0(r.UD)); set("s_ti",eur0(r.TI));
+  set("s_si",eur0(r.SI)); set("s_sum",eur0(r.staat));
+
+  const d=[["Tagesfaktor",num(r.TF,6)],["Laufende Bezüge im Zeitraum",eur(r.bez)],
+    ["Urlaubsstunden",num(r.uStd,2)+" h"],["Freistunden",num(r.fStd,2)+" h"],
+    ["Urlaub + Freistunden (Auszahlungswert)",eur(r.feWert)],
+    ["Bruttobezüge gesamt (Beitragsgrundlage)",eur(r.BG)],
+    ["INPS Arbeitnehmeranteil",eur(-r.inpsAN)],
+    ["Steuerpflichtiges Einkommen",eur(r.RC)],
+    ["Theoretisches Jahreseinkommen",eur(r.teor)],
+    ["IRPEF-Bruttosteuer",eur(r.IL)],
+    ["Absetzbetrag abhängige Arbeit",eur(r.DET)],
+    ["Ulteriore detrazione",eur(r.UD)],
+    ["Trattamento integrativo",eur(r.TI)],
+    ["Somma integrativa",eur(r.SI)],
+    ["IRPEF netto",eur(r.ILn)],
+    ["Nettolohn im Zeitraum",eur(r.netto)],
+    ["Abfertigung (TFR) netto an den Mitarbeiter",eur(r.tfrN)]];
+  document.getElementById("det").innerHTML=d.map(x=>"<tr><td>"+T(x[0])+"</td><td>"+x[1]+"</td></tr>").join("");
+}
+document.addEventListener("input",render);
+document.addEventListener("change",render);
+if(window.LOGO_SRC)document.getElementById("logo").src=window.LOGO_SRC;
+else document.getElementById("logo").style.display="none";
+
+const walk=()=>{const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode.closest('script,style,[data-notr],#start')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});const a=[];while(w.nextNode())a.push(w.currentNode);return a;};
+document.querySelectorAll("option:not([value])").forEach(o=>o.value=o.textContent);
+function setLang(l){
+  LANG=l; document.documentElement.lang=l;
+  for(const n of walk()){
+    if(n.__de===undefined){const t=n.nodeValue.replace(/\s+/g," ").trim(); if(IT[t]) n.__de=n.nodeValue; else continue;}
+    const t=n.__de.replace(/\s+/g," ").trim();
+    const lead=(n.__de.match(/^\s*/)||[""])[0],trail=(n.__de.match(/\s*$/)||[""])[0];n.nodeValue=l==="it"?lead+IT[t]+trail:n.__de;
+  }
+  document.title=T("Lohnrechner 2026");
+  document.querySelectorAll(".sw button[data-lang]").forEach(b=>b.classList.toggle("on",b.dataset.lang===l));
+  render();
+}
+function chosen(l){history.replaceState(null,"","#"+l);document.getElementById("start").style.display="none";setLang(l);window.scrollTo(0,0);}
+document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>chosen(b.dataset.lang)));
+document.getElementById("back").addEventListener("click",()=>{history.replaceState(null,"","#");document.getElementById("start").style.display="flex";});
+document.getElementById("logo2").src=window.LOGO_SRC||"";
+const hv=location.hash.replace("#","");
+if(hv==="de"||hv==="it"){document.getElementById("start").style.display="none";setLang(hv);}else{render();}
+</script>
+</body>
+</html>
